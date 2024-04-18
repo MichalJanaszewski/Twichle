@@ -1,0 +1,26 @@
+﻿@page "/"
+@inject HttpClient HttpClient
+@inject LocalStorageHandler LocalStorageHandler
+
+@rendermode InteractiveServer
+
+<PageTitle>Twichle</PageTitle>
+
+<GameBase Game="@game" DataSelectors="@dataSelectors" StorageKey="@key" TableColumNnames="@tableColumNnames" />
+
+@code {
+    private Game<MainModeStreamerData> game = new(mainApiUrl);
+
+    private string key = "/" + DateTime.Now.Date.ToString();
+
+    public string[] tableColumNnames = { "Streaner", "Language", "Data1", "Data2", "Data3" };
+
+    private Func<Streamer, object>[] dataSelectors = new Func<Streamer, object>[]
+    {
+        streamer => streamer.Profile?.Name,
+        streamer => ((MainModeStreamerData)streamer.Data).Language,
+        streamer => streamer.Data.IntData[0],
+        streamer => streamer.Data.IntData[1],
+        streamer => streamer.Data.IntData[2]
+    };
+}

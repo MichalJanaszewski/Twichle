@@ -1,0 +1,72 @@
+﻿<div>
+    <label>
+        <input @bind="Sufix" @oninput="UpdateItemsList" @onkeypress="OnKeyPress" />
+    </label>
+    <div>
+        @if (!string.IsNullOrWhiteSpace(Sufix))
+        {
+            <ul style="max-height: 200px; overflow-y: auto;">
+                @foreach (var item in filteredItems)
+                {
+                    <div @onclick="() => onClick(item.Id)">
+                    <li>
+                        <div style="display: flex; align-items: center;">
+                            <img src="@item.ImageUrl" style="width: 50px; height: 50px; margin-right: 10px;">
+                                @item.Name
+                        </div>
+                    </li>
+                    </div>
+                }
+        </ul>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Sufix { get; set; }
+    [Parameter]
+    public EventCallback<int> PassChosenStreamer { get; set; }
+    [Parameter]
+    public List<StreamerProfile>? StreamerProfile { get; set; }
+
+    private List<StreamerProfile> filteredItems = new List<StreamerProfile>();
+
+
+    private void UpdateItemsList(ChangeEventArgs e)
+    {
+
+        Sufix = e.Value == null ? "" : e.Value.ToString();
+        if (string.IsNullOrWhiteSpace(Sufix))
+        {
+            filteredItems.Clear();
+        }
+        else
+        {
+            filteredItems = StreamerProfile.Where(profile => profile.Name.StartsWith(Sufix ?? "", StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task OnKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {           
+            var foundStreamer = StreamerProfile?.Find(profile => profile.Name == Sufix);
+            if (foundStreamer != null)
+            {
+                filteredItems.Clear();
+                await onClick(foundStreamer.Id);
+            }
+        }
+    }
+
+
+    private async Task onClick(int id)
+    {   
+        await PassChosenStreamer.InvokeAsync(id);
+        Sufix = null;
+        StateHasChanged();  
+    }
+}

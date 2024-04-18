@@ -1,0 +1,70 @@
+﻿@inject HttpClient HttpClient
+@inject LocalStorageHandler LocalStorageHandler
+
+@typeparam StreamerDataType where StreamerDataType : StreamerData
+
+@if (!Game.alreadyWon)
+{
+    <InputBar PassChosenStreamer="AddStreamer" StreamerProfile="@Game.streamerList" />
+}
+
+
+<Table Streamers="@Game.chosenStreamers" WinningStreamer="@winningStreamer" 
+       DataSelectors="@DataSelectors" ComulnNames="@TableColumNnames"/>
+
+@if (Game.alreadyWon)
+{
+    <h1>YOU WON</h1>
+    <NexEvTimer></NexEvTimer>
+}
+
+@code {
+    [Parameter]
+    public  Func<Streamer, object>[] DataSelectors { get; set; }
+
+    [Parameter]
+    public Game<StreamerDataType> Game { get; set; }
+
+    [Parameter]
+    public string StorageKey { get; set; }
+    
+    [Parameter]
+    public string[] TableColumNnames { get; set; }
+
+    
+
+    private Streamer winningStreamer;
+
+    private bool alreadyWon = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Game.LoadStreamersProfilesAsync();
+        winningStreamer = await Game.GetWinningStreamer();
+        StateHasChanged();
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            string? progresValue = await LocalStorageHandler.GetValueAsync<string>(StorageKey);
+
+            await Game.LoadLocStorageAsync(progresValue);
+            StateHasChanged();
+        }
+    }
+
+
+    private async Task AddStreamer(int id)
+    {
+        string? gameHistory = await Game.AddStreamer(id);
+        if (gameHistory != null)
+        {
+            await LocalStorageHandler.SetValueAsync(StorageKey, gameHistory);
+        }
+        StateHasChanged();
+    }
+}

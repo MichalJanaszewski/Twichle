@@ -1,0 +1,66 @@
+﻿@page "/Picture"
+@inject HttpClient HttpClient
+@inject LocalStorageHandler LocalStorageHandler
+
+@rendermode InteractiveServer
+
+<PageTitle>Twichle</PageTitle>
+
+@if (imageDataUrl != null)
+{
+    <div style="width: 400px; height: 400px; overflow: hidden;">
+        <img id="image" src="@imageDataUrl" style="width: @(imgSize)px; height: @(imgSize)px; object-fit: cover;" />
+    </div>
+}
+
+<GameBase Game="@game" DataSelectors="@dataSelectors" StorageKey="@key" TableColumNnames="@tableColumNnames"/>
+
+@code {
+    private Game<MainModeStreamerData> game;
+
+    private string key = "/"+ pictureModeAccesUrl + DateTime.Now.Date.ToString();
+
+    public string[] tableColumNnames = {"Streaner"};
+
+    private Func<Streamer, object>[] dataSelectors = new Func<Streamer, object>[]
+    {
+        streamer => streamer.Profile?.Name
+    };
+
+    private int streamerCount;
+
+    private string imageDataUrl;
+
+    private double imgSize = 1000; 
+
+    protected override async void OnInitialized()
+    {
+        game = new Game<MainModeStreamerData>(mainApiUrl + pictureModeAccesUrl);
+        game.OnStreamerListChanged += UpdateStreamerCount;
+        imageDataUrl = await GetStreamerImgAsync();
+        StateHasChanged();
+    }
+
+    public async Task<string> GetStreamerImgAsync()
+    {
+        using (var httpClient = new HttpClient())
+        {
+            using (HttpResponseMessage response = await httpClient.GetAsync($"{mainApiUrl}{pictureModeAccesUrl}/Img"))
+            {
+                response.EnsureSuccessStatusCode();
+                string ?data = await response.Content.ReadFromJsonAsync<String>();
+
+                return data;
+
+            }
+        }
+
+        return null;
+    }
+
+    private void UpdateStreamerCount()
+    {
+        imgSize = 1000 - 50 * game.chosenStreamers.Count;
+        StateHasChanged(); 
+    }
+}

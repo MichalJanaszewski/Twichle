@@ -1,0 +1,55 @@
+﻿@if (Streamers != null && Streamers.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                @foreach (string columnName in ComulnNames)
+                {
+                    <th>@columnName</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var streamer in Streamers)
+            {
+                string[] backgrounds = streamer.GetBackrounds(WinningStreamer);
+                int i = 0;
+                <tr>
+                    @foreach (var selector in DataSelectors)
+                    {
+
+                        <td style="background-color: @backgrounds[i]">
+                            @if (selector == DataSelectors[0])
+                            {
+                                <div>
+                                    <img src="@streamer.Profile?.ImageUrl" alt="Avatar" class="img-thumbnail" style="width: 50px; height: 50px; margin-right: 10px; background-color: @backgrounds[i]; border: 0;" />
+                                    @streamer.Profile?.Name
+                                </div>
+                            }
+                            else{
+                                @selector.Invoke(streamer)
+                            }
+                        </td>                       
+                        i++;
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+    [Parameter]
+    public LinkedList<Streamer> Streamers { get; set; }
+
+    [Parameter]
+    public Func<Streamer, object>[] DataSelectors { get; set; } 
+
+    [Parameter]
+    public Streamer WinningStreamer { get; set; }
+
+    [Parameter]
+    public string[] ComulnNames { get; set; }
+
+}

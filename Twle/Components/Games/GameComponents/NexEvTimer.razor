@@ -1,0 +1,45 @@
+﻿<h3>Timer</h3>
+
+@if (!timerReached)
+{
+    <p>Next game at: @endTime.ToString("HH:mm:ss")</p>
+    <p>Time left: @timeLeft.ToString("hh\\:mm\\:ss\\.f")</p>
+}
+else
+{
+    <p>Czas minął!</p>
+}
+
+@code {
+    private Timer timer;
+    private DateTime endTime;
+    private TimeSpan timeLeft;
+    private bool timerReached = false;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        DateTime now = DateTime.Now;
+        endTime = new DateTime(now.Year, now.Month, now.Day, 23, 59, 59);
+        timeLeft = endTime - now;
+
+        timer = new Timer(100);
+        timer.Elapsed += TimerElapsed;
+        timer.Start();
+    }
+
+    private void TimerElapsed(object sender, ElapsedEventArgs e)
+    {
+        DateTime now = DateTime.Now;
+        timeLeft = endTime - now;
+
+        if (now >= endTime)
+        {
+            timerReached = true;
+            timer.Stop();
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+}

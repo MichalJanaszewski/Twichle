@@ -1,0 +1,63 @@
+﻿@page "/language/{languaneName}"
+@inject HttpClient HttpClient
+@inject LocalStorageHandler LocalStorageHandler
+@inject NavigationManager NavigationManager
+
+@rendermode InteractiveServer
+
+<PageTitle>Language</PageTitle>
+
+<h1>@languaneName</h1>
+
+<div style="display: flex;">
+    <div style="flex: 3;">
+        @if (languaneName != "none")
+        {
+            <GameBase Game="@game" DataSelectors="@dataSelectors" StorageKey="@localStorageKey" TableColumNnames="@tableColumNnames" />
+        }
+    </div>
+
+    <ul style="flex: 1;">
+        @foreach (var language in languages)
+        {
+            <li><a href="/language/@language">@language</a></li>
+        }
+    </ul>
+
+</div>
+
+@code {
+    [Parameter]
+    public string languaneName { get; set; } = "none";
+
+    private string profilesUrl = "";
+
+    private Game<ChosenlanguageStreamerData> game = null;
+
+    private string localStorageKey;
+
+    private string[] languages = ["English", "Spanish", "Polish", "Turkish", "Thai", "Korean", "Ukrainian"];
+
+    public string[] tableColumNnames = { "Streaner", "Data1", "Data2", "Data3" };
+
+    private Func<Streamer, object>[] dataSelectors = new Func<Streamer, object>[] 
+    {
+        streamer => streamer.Profile?.Name,
+        streamer => streamer.Data.IntData[0],
+        streamer => streamer.Data.IntData[1],
+        streamer => streamer.Data.IntData[2]
+    };
+
+    protected override void OnInitialized()
+    {
+        languaneName = NavigationManager.Uri.Split('/').Last();
+        profilesUrl = mainApiUrl + languageModeAccesUrl + languaneName;
+        localStorageKey = "/" + languageModeAccesUrl + languaneName + DateTime.Now.Date.ToString();
+        game = new(profilesUrl);
+        StateHasChanged();
+    }
+}
+
+
+
+ 
