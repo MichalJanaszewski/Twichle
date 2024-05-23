@@ -1,9 +1,9 @@
 ﻿<h3>Timer</h3>
 
-@if (!timerReached)
+@if (!_timerReached)
 {
-    <p>Next game at: @endTime.ToString("HH:mm:ss")</p>
-    <p>Time left: @timeLeft.ToString("hh\\:mm\\:ss\\.f")</p>
+    <p>Next game at: @_endTime?.ToString("HH:mm:ss")</p>
+    <p>Time left: @_timeLeft?.ToString("hh\\:mm\\:ss\\.f")</p>
 }
 else
 {
@@ -11,33 +11,37 @@ else
 }
 
 @code {
-    private Timer timer;
-    private DateTime endTime;
-    private TimeSpan timeLeft;
-    private bool timerReached = false;
+    private Timer _timer = new Timer(100);
+    private DateTime? _endTime;
+    private TimeSpan? _timeLeft;
+    private bool _timerReached = false;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
 
         DateTime now = DateTime.Now;
-        endTime = new DateTime(now.Year, now.Month, now.Day, 23, 59, 59);
-        timeLeft = endTime - now;
+        _endTime = new DateTime(now.Year, now.Month, now.Day, 23, 59, 59);
+        _timeLeft = _endTime - now;
 
-        timer = new Timer(100);
-        timer.Elapsed += TimerElapsed;
-        timer.Start();
+        _timer.Elapsed += TimerElapsed;
+        _timer.Start();
     }
 
-    private void TimerElapsed(object sender, ElapsedEventArgs e)
+    private void TimerElapsed(object? sender, ElapsedEventArgs e)
     {
         DateTime now = DateTime.Now;
-        timeLeft = endTime - now;
+        _timeLeft = _endTime - now;
 
-        if (now >= endTime)
+        if (_endTime.HasValue)
         {
-            timerReached = true;
-            timer.Stop();
+            _timeLeft = _endTime.Value - now;
+
+            if (now >= _endTime.Value)
+            {
+                _timerReached = true;
+                _timer.Stop();
+            }
         }
 
         InvokeAsync(StateHasChanged);

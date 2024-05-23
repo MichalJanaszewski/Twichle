@@ -1,19 +1,21 @@
-﻿using Twle.Api.Models;
-using Twle.Components.Models;
+﻿using Twle.Components.Models;
 
 namespace Twle.Components.Games
 {
     public class Game<T> where T : StreamerData
     {
-        public LinkedList<Streamer>? chosenStreamers = new LinkedList<Streamer>();
-        public List<StreamerProfile>? streamerList = new List<StreamerProfile>();
-        public Boolean alreadyWon = false;
-        public string gameHistory = "";
-        public int WinnerId { get; set; } = -1;
-        protected string profilesApiUrl;
+        public readonly Streamer[] ChosenStreamers = new Streamer[20];
+        public int Size;
+
+        public List<StreamerProfile> StreamerProfiles = new List<StreamerProfile>();
+        public bool AlreadyWon;
+        private string _gameHistory = "";
+        private int WinnerId { get; set; } = -1;
+        private readonly string _profilesApiUrl;
+
         public Game(string profilesApiUrl)
         {
-            this.profilesApiUrl = profilesApiUrl;
+            this._profilesApiUrl = profilesApiUrl;
         }
 
         public async Task LoadLocStorageAsync(string? progresValue)
@@ -27,10 +29,10 @@ namespace Twle.Components.Games
             string[] splitedStoreage = progresValue.Substring(0, progresValue.LastIndexOf(';')).Split(';');
 
             if (splitedStoreage.Length > 0 && Int32.Parse(splitedStoreage[splitedStoreage.Length - 1]) == WinnerId) {
-                alreadyWon = true;
+                AlreadyWon = true;
             }
 
-            if (streamerList == null || !streamerList.Any())
+            if (!StreamerProfiles.Any())
             {
                 await LoadStreamersProfilesAsync();
             }
@@ -44,11 +46,18 @@ namespace Twle.Components.Games
         public async Task LoadStreamersProfilesAsync()
         {
                 using var httpClient = new HttpClient();
-            using HttpResponseMessage response = await httpClient.GetAsync(profilesApiUrl),
-                   winnerResponse = await httpClient.GetAsync(profilesApiUrl +"/WinnerId");
+            using HttpResponseMessage response = await httpClient.GetAsync(_profilesApiUrl),
+                   winnerResponse = await httpClient.GetAsync(_profilesApiUrl +"/WinnerId");
             if (response.IsSuccessStatusCode)
             {
-                streamerList = await response.Content.ReadFromJsonAsync<List<StreamerProfile>>();
+                List<StreamerProfile>? tmpList = await response.Content.ReadFromJsonAsync<List<StreamerProfile>>();
+                if (tmpList is null)
+                {
+                    throw new HttpRequestException("Failed to retrieve data from the server");
+                }
+              
+                StreamerProfiles = tmpList;
+                
             }
 
             if (winnerResponse.IsSuccessStatusCode)
@@ -58,59 +67,58 @@ namespace Twle.Components.Games
 
         }
 
-        public async Task<string?> LoadStreamerById(int streamerId)
+        private async Task<string?> LoadStreamerById(int streamerId)
         {
-            using (var httpClient = new HttpClient())
+            using var httpClient = new HttpClient();
+            using HttpResponseMessage response = await httpClient.GetAsync($"{_profilesApiUrl}/{streamerId}");
+            response.EnsureSuccessStatusCode();
+            StreamerData? data = await response.Content.ReadFromJsonAsync<T>();
+            if (data != null)
             {
-                using (HttpResponseMessage response = await httpClient.GetAsync($"{profilesApiUrl}/{streamerId}"))
-                {
-                    response.EnsureSuccessStatusCode();
-                    StreamerData? data = await response.Content.ReadFromJsonAsync<T>();
-                    if (data != null)
-                    {
-                        chosenStreamers.AddLast(new Streamer(streamerList.Find(profile => profile.Id == streamerId), data));
-                        gameHistory += streamerId.ToString() + ";";
-                        return gameHistory;
-                    }
-                }
+                ChosenStreamers[Size] = new Streamer(StreamerProfiles.First(profile => profile.Id == streamerId), data);
+                ChosenStreamers[Size++].Profile.IsVisible = true;
+                _gameHistory += streamerId.ToString() + ";";
+                return _gameHistory;
             }
+
             return null;
         }
 
-        public event Action OnStreamerListChanged;
+        public event Action? OnStreamerListChanged;
         public async Task<string?> AddStreamer(int id)
         {
             string? valueToSave = null;
-            if (streamerList != null && streamerList.Any(profile => profile.Id == id))
+            if (StreamerProfiles.Any(profile => profile.Id == id))
             {
                 valueToSave = await LoadStreamerById(id);
-                streamerList.RemoveAt(streamerList.FindIndex(profile => profile.Id == id));
+                StreamerProfiles.RemoveAt(StreamerProfiles.FindIndex(profile => profile.Id == id));
                 if (id == WinnerId)
                 {
-                    alreadyWon = true;
+                    AlreadyWon = true;
                 }
             }
             OnStreamerListChanged?.Invoke();
             return valueToSave;
         }
 
-        public async Task<Streamer> GetWinningStreamer() 
+        public async Task<Streamer?> GetWinningStreamer() 
         {
-            using (var httpClient = new HttpClient())
+            using var httpClient = new HttpClient();
+            using HttpResponseMessage response = await httpClient.GetAsync($"{_profilesApiUrl}/{WinnerId}");
+            response.EnsureSuccessStatusCode();
+            StreamerData? data = await response.Content.ReadFromJsonAsync<T>();
+            if (data != null)
             {
-                using (HttpResponseMessage response = await httpClient.GetAsync($"{profilesApiUrl}/{WinnerId}"))
+                StreamerProfile? profile = StreamerProfiles.FirstOrDefault(profile => profile.Id == WinnerId);
+                if (profile is null) 
                 {
-                    response.EnsureSuccessStatusCode();
-                    StreamerData? data = await response.Content.ReadFromJsonAsync<T>();
-                    if (data != null)
-                    {
-                        Streamer streamer = new Streamer(streamerList.Find(profile => profile.Id == WinnerId), data);
-                        return streamer;
-                    }
+                    return null;
                 }
+                Streamer streamer = new Streamer(profile, data);
+                return streamer;
             }
 
-            return null;
+            throw new InvalidOperationException("Can't access server");
         }
 
     }

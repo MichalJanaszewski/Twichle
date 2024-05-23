@@ -3,22 +3,36 @@
         <input @bind="Sufix" @oninput="UpdateItemsList" @onkeypress="OnKeyPress" />
     </label>
     <div>
-        @if (!string.IsNullOrWhiteSpace(Sufix))
-        {
-            <ul style="max-height: 200px; overflow-y: auto;">
-                @foreach (var item in filteredItems)
+        <ul style="max-height: 200px; overflow-y: auto;">
+            @if (!string.IsNullOrWhiteSpace(Sufix))
+            {
+                foreach (var item in StreamerProfile)
                 {
-                    <div @onclick="() => onClick(item.Id)">
-                    <li>
-                        <div style="display: flex; align-items: center;">
-                            <img src="@item.ImageUrl" style="width: 50px; height: 50px; margin-right: 10px;">
+                    <div style="@(item.IsVisible ? "" : "display: none;")" @onclick="() => onClick(item.Id)">
+                        <li>
+                            <div style="display: flex; align-items: center;">
+                                <img src="@item.ImageUrl" style="width: 50px; height: 50px; margin-right: 10px;" alt="Profile avatar">
                                 @item.Name
-                        </div>
-                    </li>
+                            </div>
+                        </li>
                     </div>
                 }
+            }
+            else
+            {
+                foreach (var item in StreamerProfile)
+                {
+                    <div @onclick="() => onClick(item.Id)">
+                        <li>
+                            <div style="display: flex; align-items: center;">
+                                <img src="@item.ImageUrl" style="width: 50px; height: 50px; margin-right: 10px;" alt="Profile avatar">
+                                @item.Name
+                            </div>
+                        </li>
+                    </div>
+                }
+            }
         </ul>
-        }
     </div>
 </div>
 
@@ -28,22 +42,23 @@
     [Parameter]
     public EventCallback<int> PassChosenStreamer { get; set; }
     [Parameter]
-    public List<StreamerProfile>? StreamerProfile { get; set; }
-
-    private List<StreamerProfile> filteredItems = new List<StreamerProfile>();
-
+    public StreamerProfile[] StreamerProfile { get; set; } = new StreamerProfile[20];
 
     private void UpdateItemsList(ChangeEventArgs e)
     {
-
         Sufix = e.Value == null ? "" : e.Value.ToString();
-        if (string.IsNullOrWhiteSpace(Sufix))
+
+        foreach (var streamer in StreamerProfile)
         {
-            filteredItems.Clear();
-        }
-        else
-        {
-            filteredItems = StreamerProfile.Where(profile => profile.Name.StartsWith(Sufix ?? "", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (streamer.Name.StartsWith(Sufix ?? "", StringComparison.OrdinalIgnoreCase))
+            {
+                streamer.IsVisible = true;
+            }
+            else
+            {
+                streamer.IsVisible = false;
+            }
+
         }
 
         StateHasChanged();
@@ -52,12 +67,16 @@
     private async Task OnKeyPress(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
-        {           
-            var foundStreamer = StreamerProfile?.Find(profile => profile.Name == Sufix);
-            if (foundStreamer != null)
+        {
+            int foundId = FindStreamer(StreamerProfile, Sufix);
+            if (foundId != -1)
             {
-                filteredItems.Clear();
-                await onClick(foundStreamer.Id);
+                foreach (var streamer in StreamerProfile)
+                {    
+                        streamer.IsVisible = false;
+                }
+
+                await onClick(foundId);
             }
         }
     }
@@ -66,7 +85,7 @@
     private async Task onClick(int id)
     {   
         await PassChosenStreamer.InvokeAsync(id);
-        Sufix = null;
+        Sufix = "";
         StateHasChanged();  
     }
 }

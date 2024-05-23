@@ -1,5 +1,4 @@
-﻿using Twle.Api.Models;
-using static Twle.Components.Utils.Properties;
+﻿using static Twle.Components.Utils.Properties;
 namespace Twle.Components.Models;
 
 public class Streamer

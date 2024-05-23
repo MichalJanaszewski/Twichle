@@ -1,18 +1,25 @@
 ﻿@inject HttpClient HttpClient
 @inject LocalStorageHandler LocalStorageHandler
 
-@typeparam StreamerDataType where StreamerDataType : StreamerData
+@typeparam TStreamerDataType where TStreamerDataType : StreamerData
 
-@if (!Game.alreadyWon)
+
+@if (!Game.AlreadyWon)
 {
-    <InputBar PassChosenStreamer="AddStreamer" StreamerProfile="@Game.streamerList" />
+    <InputBar PassChosenStreamer="AddStreamer" StreamerProfile="@Game.StreamerProfiles.ToArray()" />
 }
 
+@if (_dataIsLoaded){
+    <Table Streamers="@Game.ChosenStreamers" WinningStreamer="@_winningStreamer"
+           DataSelectors="@DataSelectors" ComulnNames="@TableColumNnames">
+        <LastColumn>
+            @Content?.Invoke(((StreamerData, string))context)
+        </LastColumn>
+    </Table>
+    
+}
 
-<Table Streamers="@Game.chosenStreamers" WinningStreamer="@winningStreamer" 
-       DataSelectors="@DataSelectors" ComulnNames="@TableColumNnames"/>
-
-@if (Game.alreadyWon)
+@if (Game.AlreadyWon)
 {
     <h1>YOU WON</h1>
     <NexEvTimer></NexEvTimer>
@@ -20,28 +27,38 @@
 
 @code {
     [Parameter]
-    public  Func<Streamer, object>[] DataSelectors { get; set; }
+    public Func<Streamer, object>[] DataSelectors { get; set; } = [];
 
     [Parameter]
-    public Game<StreamerDataType> Game { get; set; }
+    public Game<TStreamerDataType> Game { get; set; } = null!;
 
     [Parameter]
-    public string StorageKey { get; set; }
+    public string StorageKey { get; set; } = "";
+
+    [Parameter]
+    public string[] TableColumNnames { get; set; } = [];
     
     [Parameter]
-    public string[] TableColumNnames { get; set; }
-
+    public RenderFragment<(StreamerData streamerData, string color)>? Content { get; set; }
+    
     
 
-    private Streamer winningStreamer;
+    private Streamer? _winningStreamer;
 
-    private bool alreadyWon = false;
+    private bool _alreadyWon = false;
 
+    private bool _dataIsLoaded = false;
 
     protected override async Task OnInitializedAsync()
     {
+        if (Game is null)
+        {
+            throw new InvalidOperationException("Game is null.");
+        }
+
         await Game.LoadStreamersProfilesAsync();
-        winningStreamer = await Game.GetWinningStreamer();
+        _winningStreamer = await Game.GetWinningStreamer();
+
         StateHasChanged();
     }
 
@@ -50,9 +67,11 @@
     {
         if (firstRender)
         {
-            string? progresValue = await LocalStorageHandler.GetValueAsync<string>(StorageKey);
+            string progresValue = await LocalStorageHandler.GetValueAsync<string>(StorageKey);
 
             await Game.LoadLocStorageAsync(progresValue);
+
+            _dataIsLoaded = true;
             StateHasChanged();
         }
     }

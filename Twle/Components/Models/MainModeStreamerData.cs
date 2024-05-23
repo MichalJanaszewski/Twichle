@@ -4,7 +4,17 @@ namespace Twle.Components.Models;
 
 public class MainModeStreamerData : StreamerData
 {
-    public string Language { get; set; }
+    public MainModeStreamerData(string mostStreamedCategory, string categoryUrl)
+    {
+        MostStreamedCategory = mostStreamedCategory;
+        CategoryUrl = categoryUrl;
+    }
+
+    public string Language { get; set; } = "";
+    
+    public required string MostStreamedCategory { get; init; }
+    
+    public required string CategoryUrl { get; init; }
     public override int[] CompareStreamerData(Object streamerData)
     {
         if (streamerData.GetType() != this.GetType()) {
@@ -16,14 +26,18 @@ public class MainModeStreamerData : StreamerData
 
     private int[] CompareStreamerData(MainModeStreamerData streamerData) {
 
-        int[] result = new int[IntData.Length + 1];
+        int[] result = new int[IntData.Length + 3];
         result[0] = Language == streamerData.Language ? CorrectBackgroundId : WrongBackgroundId;
-
+        
         for (int i = 0; i < IntData.Length; i++)
         {
             result[i + 1] = IntData[i].CompareTo(streamerData.IntData[i]);
         }
+        
+        result[4] = MostStreamedCategory == streamerData.MostStreamedCategory ? CorrectBackgroundId : WrongBackgroundId;
 
+        result[5] = result[4];
+        
         return result;
     }
 

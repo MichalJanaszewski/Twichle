@@ -14,10 +14,10 @@ public static class Properties
     public const int ToHighDataBackgroundId = 1;
     public const int ToLowDataBackgroundId = -1;
 
-    public static string mainApiUrl = "http://localhost:5196";
-    public static string languageModeAccesUrl = "/Language/";
-    public static string pictureModeAccesUrl = "/Picture";
-    public static string liveModeAccesUrl = "/Live";
-
+    public const string MainApiUrl = "https://localhost:7017";
+    public static string MainModeApiUrl = "/MainMode";
+    public const string LanguageModeAccesUrl = "/LanguageMode/";
+    public const string PictureModeAccesUrl = "/PictureMode";
+    public const string LiveModeAccesUrl = "/LiveMode";
 }
 

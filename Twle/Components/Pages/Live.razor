@@ -1,23 +1,30 @@
 ﻿@page "/Live"
-@inject HttpClient HttpClient
-@inject LocalStorageHandler LocalStorageHandler
+@using System.Globalization
 
 @rendermode InteractiveServer
 
 <PageTitle>Twichle</PageTitle>
 
-<GameBase Game="@game" DataSelectors="@dataSelectors" StorageKey="@key" TableColumNnames="@tableColumNnames" />
+<GameBase Game="@_game" DataSelectors="@_dataSelectors" StorageKey="@_key" TableColumNnames="@_tableColumNnames" >
+    <Content>
+        <td style="background-color:@context.Item2 ">
+            <img src="@(((MainModeStreamerData)context.streamerData).CategoryUrl)"
+                 alt="@(((MainModeStreamerData)context.streamerData).MostStreamedCategory)" class="category-img">
+        </td>
+    </Content>
+</GameBase>
+
 
 @code {
-    private Game<MainModeStreamerData> game = new(mainApiUrl + liveModeAccesUrl);
+    private readonly Game<MainModeStreamerData> _game = new(MainApiUrl + LiveModeAccesUrl);
 
-    private string key = "/" + liveModeAccesUrl + DateTime.Now.Date.ToString();
+    private readonly string _key = "/" + LiveModeAccesUrl + DateTime.Now.Date.ToString(CultureInfo.InvariantCulture);
 
-    public string[] tableColumNnames = { "Streaner", "Language", "Data1", "Data2", "Data3" };
+    private readonly string[] _tableColumNnames = { "Streamer", "Language", "Data1", "Data2", "Data3" };
 
-    private Func<Streamer, object>[] dataSelectors = new Func<Streamer, object>[]
+    private readonly Func<Streamer, object>[] _dataSelectors = new Func<Streamer, object>[]
     {
-        streamer => streamer.Profile?.Name,
+        streamer => streamer.Profile.Name,
         streamer => ((MainModeStreamerData)streamer.Data).Language,
         streamer => streamer.Data.IntData[0],
         streamer => streamer.Data.IntData[1],

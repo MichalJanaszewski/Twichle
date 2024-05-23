@@ -1,4 +1,4 @@
-﻿@if (Streamers != null && Streamers.Any())
+﻿@if (Streamers.Any())
 {
     <table class="table">
         <thead>
@@ -10,28 +10,45 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var streamer in Streamers)
+            @if (DataSelectors is null)
             {
-                string[] backgrounds = streamer.GetBackrounds(WinningStreamer);
-                int i = 0;
-                <tr>
-                    @foreach (var selector in DataSelectors)
-                    {
+                throw new InvalidOperationException("DataSelectors is null. Cannot iterate over null collection.");
+            }
 
-                        <td style="background-color: @backgrounds[i]">
-                            @if (selector == DataSelectors[0])
-                            {
-                                <div>
-                                    <img src="@streamer.Profile?.ImageUrl" alt="Avatar" class="img-thumbnail" style="width: 50px; height: 50px; margin-right: 10px; background-color: @backgrounds[i]; border: 0;" />
-                                    @streamer.Profile?.Name
-                                </div>
-                            }
-                            else{
-                                @selector.Invoke(streamer)
-                            }
-                        </td>                       
-                        i++;
+            @for (int i = 0; i < Streamers.Length; i++)
+            {
+                var streamer = Streamers[i];
+                if (streamer is null)
+                {
+                    break;
+                }
+
+                if (!streamer.Profile.IsVisible)
+                {
+                    continue;
+                }
+
+                string[] backgrounds = streamer.GetBackrounds(WinningStreamer);
+                string color = @backgrounds[backgrounds.Length - 1];
+                <tr>
+                    <td style="background-color: @backgrounds[0]">
+                        <div>
+                            <div>
+                                <img src="@streamer.Profile.ImageUrl" alt="Avatar" class="img-avatar"/>
+                            </div>
+                            @streamer.Profile.Name
+                        </div>
+                    </td>
+                    @for (int j = 1; j < DataSelectors.Length - 1; j++)
+                    {
+                        <td style="background-color: @backgrounds[j]">
+                            @DataSelectors[j].Invoke(streamer)
+                        </td>
                     }
+
+
+                    @LastColumn?.Invoke((streamer.Data,@color))
+
                 </tr>
             }
         </tbody>
@@ -41,15 +58,18 @@
 
 @code {
     [Parameter]
-    public LinkedList<Streamer> Streamers { get; set; }
+    public Streamer[] Streamers { get; set; } = new Streamer[20];
 
     [Parameter]
-    public Func<Streamer, object>[] DataSelectors { get; set; } 
+    public Func<Streamer, object>[]? DataSelectors { get; set; }
 
     [Parameter]
-    public Streamer WinningStreamer { get; set; }
+    public Streamer? WinningStreamer { get; set; }
 
     [Parameter]
-    public string[] ComulnNames { get; set; }
-
+    public string[] ComulnNames { get; set; } = [];
+    
+    [Parameter]
+    public RenderFragment<(StreamerData StreamerData, string Color)>? LastColumn { get; set; }
+    
 }

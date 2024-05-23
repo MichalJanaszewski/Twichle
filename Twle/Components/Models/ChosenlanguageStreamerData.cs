@@ -1,8 +1,12 @@
-﻿using Twle.Components.Pages;
+﻿using static Twle.Components.Utils.Properties;
 
 namespace Twle.Components.Models;
-public class ChosenlanguageStreamerData : StreamerData
+public abstract class ChosenlanguageStreamerData(string mostStreamedCategory, string categoryUrl) : StreamerData
 {
+    public required string MostStreamedCategory { get; init; } = mostStreamedCategory;
+
+    public required string CategoryUrl { get; init; } = categoryUrl;
+
     public override int[] CompareStreamerData(Object streamerData)
     {
         if (streamerData.GetType() != this.GetType())
@@ -15,15 +19,16 @@ public class ChosenlanguageStreamerData : StreamerData
 
     private int[] CompareStreamerData(ChosenlanguageStreamerData streamerData)
     {
-        int[] result = new int[IntData.Length];
+        int[] result = new int[IntData.Length + 1];
 
-        for (int i = 0; i < IntData.Length; i++)
+        for (int i = 0; i < IntData.Length - 1; i++)
         {
             result[i] = IntData[i].CompareTo(streamerData.IntData[i]);
         }
-
+        
+        result[IntData.Length ] = MostStreamedCategory == streamerData.MostStreamedCategory ? CorrectBackgroundId : WrongBackgroundId;
+        
         return result;
     }
-
 }
 

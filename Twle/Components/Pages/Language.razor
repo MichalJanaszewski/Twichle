@@ -1,24 +1,31 @@
 ﻿@page "/language/{languaneName}"
-@inject HttpClient HttpClient
-@inject LocalStorageHandler LocalStorageHandler
+@using System.Globalization
 @inject NavigationManager NavigationManager
 
 @rendermode InteractiveServer
 
 <PageTitle>Language</PageTitle>
 
-<h1>@languaneName</h1>
+<h1>@LanguaneName</h1>
 
 <div style="display: flex;">
     <div style="flex: 3;">
-        @if (languaneName != "none")
+        @if (LanguaneName != "none")
         {
-            <GameBase Game="@game" DataSelectors="@dataSelectors" StorageKey="@localStorageKey" TableColumNnames="@tableColumNnames" />
+            <GameBase Game="@_game" DataSelectors="@_dataSelectors" StorageKey="@_localStorageKey" TableColumNnames="@_tableColumnNames" >
+                <Content>
+                    <td style="background-color:@context.Item2 ">
+                        <img src="@(((ChosenlanguageStreamerData)context.streamerData).CategoryUrl)"
+                             alt="@(((ChosenlanguageStreamerData)context.streamerData).MostStreamedCategory)" class="category-img">
+                    </td>
+                </Content>
+            </GameBase>
+
         }
     </div>
 
     <ul style="flex: 1;">
-        @foreach (var language in languages)
+        @foreach (var language in _languages)
         {
             <li><a href="/language/@language">@language</a></li>
         }
@@ -28,21 +35,28 @@
 
 @code {
     [Parameter]
-    public string languaneName { get; set; } = "none";
+    public string LanguaneName { get; set; } = "none";
 
-    private string profilesUrl = "";
+    private string _profilesUrl = "";
 
-    private Game<ChosenlanguageStreamerData> game = null;
+    private Game<ChosenlanguageStreamerData> _game;
 
-    private string localStorageKey;
+    private string _localStorageKey;
 
-    private string[] languages = ["English", "Spanish", "Polish", "Turkish", "Thai", "Korean", "Ukrainian"];
+    private readonly string[] _languages = [
+        "English",
+        "Spanish",
+        "Russian",
+        "French",
+        "Portuguese",
+        "German",
+    ];
 
-    public string[] tableColumNnames = { "Streaner", "Data1", "Data2", "Data3" };
+    private readonly string[] _tableColumnNames = { "Streamer", "Data1", "Data2", "Data3" };
 
-    private Func<Streamer, object>[] dataSelectors = new Func<Streamer, object>[] 
+    private readonly Func<Streamer, object>[] _dataSelectors = new Func<Streamer, object>[] 
     {
-        streamer => streamer.Profile?.Name,
+        streamer => streamer.Profile.Name,
         streamer => streamer.Data.IntData[0],
         streamer => streamer.Data.IntData[1],
         streamer => streamer.Data.IntData[2]
@@ -50,10 +64,10 @@
 
     protected override void OnInitialized()
     {
-        languaneName = NavigationManager.Uri.Split('/').Last();
-        profilesUrl = mainApiUrl + languageModeAccesUrl + languaneName;
-        localStorageKey = "/" + languageModeAccesUrl + languaneName + DateTime.Now.Date.ToString();
-        game = new(profilesUrl);
+        LanguaneName = NavigationManager.Uri.Split('/').Last();
+        _profilesUrl = MainApiUrl + LanguageModeAccesUrl + LanguaneName;
+        _localStorageKey = "/" + LanguageModeAccesUrl + LanguaneName + DateTime.Now.Date.ToString(CultureInfo.InvariantCulture);
+        _game = new(_profilesUrl);
         StateHasChanged();
     }
 }
