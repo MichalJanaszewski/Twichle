@@ -1,4 +1,6 @@
-﻿using Twle.Components.Models;
+﻿using System.Text.Json;
+using Twle.Components.Models;
+
 
 namespace Twle.Components.Games
 {
@@ -18,12 +20,12 @@ namespace Twle.Components.Games
             this._profilesApiUrl = profilesApiUrl;
         }
 
-        public async Task LoadLocStorageAsync(string? progresValue)
+        public async Task<int> LoadLocStorageAsync(string? progresValue)
         {
-
+            int streamersCount = 0;
             if (progresValue == null)
             {
-                return;
+                return streamersCount;
             }
 
             string[] splitedStoreage = progresValue.Substring(0, progresValue.LastIndexOf(';')).Split(';');
@@ -36,12 +38,15 @@ namespace Twle.Components.Games
             {
                 await LoadStreamersProfilesAsync();
             }
-
+            
             foreach (string stringId in splitedStoreage)
             {
                 int id = Int32.Parse(stringId);
                 await AddStreamer(id);
+                streamersCount++;
             }
+
+            return streamersCount;
         }
         public async Task LoadStreamersProfilesAsync()
         {
@@ -69,6 +74,7 @@ namespace Twle.Components.Games
 
         private async Task<string?> LoadStreamerById(int streamerId)
         {
+
             using var httpClient = new HttpClient();
             using HttpResponseMessage response = await httpClient.GetAsync($"{_profilesApiUrl}/{streamerId}");
             response.EnsureSuccessStatusCode();
@@ -106,7 +112,10 @@ namespace Twle.Components.Games
             using var httpClient = new HttpClient();
             using HttpResponseMessage response = await httpClient.GetAsync($"{_profilesApiUrl}/{WinnerId}");
             response.EnsureSuccessStatusCode();
-            StreamerData? data = await response.Content.ReadFromJsonAsync<T>();
+
+            string jsonString = await response.Content.ReadAsStringAsync();
+            
+            var data = await response.Content.ReadFromJsonAsync<T>();
             if (data != null)
             {
                 StreamerProfile? profile = StreamerProfiles.FirstOrDefault(profile => profile.Id == WinnerId);

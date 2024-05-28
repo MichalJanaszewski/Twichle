@@ -6,30 +6,38 @@
 
 <PageTitle>Language</PageTitle>
 
-<h1>@LanguaneName</h1>
+<div class="container">
+    @if (LanguaneName != "none")
+    {
+        <h1>@LanguaneName</h1>
+    }
+    else
+    {
+        <div class="container">
+            <h1>Choose streamers with streaming language:</h1>
+            <ul class="language-list" style="flex: 1; margin-left: 50px ">
+                @foreach (var language in _languages)
+                {
+                    <li><a class="language-list-item" style="color: black" href="/language/@language">@language</a></li>
+                }
+            </ul>
+        </div>
+    }
+    
 
-<div style="display: flex;">
     <div style="flex: 3;">
-        @if (LanguaneName != "none")
-        {
-            <GameBase Game="@_game" DataSelectors="@_dataSelectors" StorageKey="@_localStorageKey" TableColumNnames="@_tableColumnNames" >
-                <Content>
-                    <td style="background-color:@context.Item2 ">
-                        <img src="@(((ChosenlanguageStreamerData)context.streamerData).CategoryUrl)"
-                             alt="@(((ChosenlanguageStreamerData)context.streamerData).MostStreamedCategory)" class="category-img">
-                    </td>
-                </Content>
-            </GameBase>
+            @if (LanguaneName != "none")
+            {
+                <GameBase Game="@_game" DataSelectors="@_dataSelectors" StorageKey="@_localStorageKey" TableColumNnames="@_tableColumnNames">
+                    <Content>
+                        <img src="@(((ChosenlanguageStreamerData)context).CategoryUrl)"
+                             alt="@(((ChosenlanguageStreamerData)context).MostStreamedCategory)" class="category-img">
+                    </Content>
+                </GameBase>
 
-        }
-    </div>
+            }
+        </div>
 
-    <ul style="flex: 1;">
-        @foreach (var language in _languages)
-        {
-            <li><a href="/language/@language">@language</a></li>
-        }
-    </ul>
 
 </div>
 
@@ -39,10 +47,10 @@
 
     private string _profilesUrl = "";
 
-    private Game<ChosenlanguageStreamerData> _game;
+    private Game<ChosenlanguageStreamerData> _game = null!;
 
-    private string _localStorageKey;
-
+    private string _localStorageKey = null!;
+    
     private readonly string[] _languages = [
         "English",
         "Spanish",
@@ -52,14 +60,16 @@
         "German",
     ];
 
-    private readonly string[] _tableColumnNames = { "Streamer", "Data1", "Data2", "Data3" };
+    private readonly string[] _tableColumnNames = { "Streamer", "Hours Watched", "Average viewers", "Total Followers", "Most streamed category" };
 
     private readonly Func<Streamer, object>[] _dataSelectors = new Func<Streamer, object>[] 
     {
         streamer => streamer.Profile.Name,
         streamer => streamer.Data.IntData[0],
         streamer => streamer.Data.IntData[1],
-        streamer => streamer.Data.IntData[2]
+        streamer => streamer.Data.IntData[2],
+        streamer => ((ChosenlanguageStreamerData)streamer.Data).MostStreamedCategory,
+        streamer => ((ChosenlanguageStreamerData)streamer.Data).CategoryUrl
     };
 
     protected override void OnInitialized()

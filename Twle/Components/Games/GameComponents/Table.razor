@@ -1,75 +1,213 @@
-﻿@if (Streamers.Any())
+﻿@inject IJSRuntime JSRuntime
+
+@if (Streamers.Any())
 {
-    <table class="table">
+    <tablen>
+        
         <thead>
-            <tr>
-                @foreach (string columnName in ComulnNames)
-                {
-                    <th>@columnName</th>
-                }
-            </tr>
+        
+        <tr>
+        @foreach (string columnName in ColumnNames)
+        {
+            <th class="header-cell">
+                @columnName
+            </th>
+        }
+    </tr>
         </thead>
+        
         <tbody>
-            @if (DataSelectors is null)
+        @if (DataSelectors is null)
+        {
+            throw new InvalidOperationException("DataSelectors is null. Cannot iterate over null collection.");
+        }
+
+        @for (int i = 0; i < StreamersCount - 1; i++)
+        {
+            var streamer = Streamers[i];
+            if (streamer is null)
             {
-                throw new InvalidOperationException("DataSelectors is null. Cannot iterate over null collection.");
+                break;
             }
 
-            @for (int i = 0; i < Streamers.Length; i++)
+            if (!streamer.Profile.IsVisible)
             {
-                var streamer = Streamers[i];
-                if (streamer is null)
-                {
-                    break;
-                }
+                continue;
+            }
 
-                if (!streamer.Profile.IsVisible)
-                {
-                    continue;
-                }
+            string[] backgrounds = streamer.GetBackrounds(WinningStreamer!);
 
-                string[] backgrounds = streamer.GetBackrounds(WinningStreamer);
-                string color = @backgrounds[backgrounds.Length - 1];
-                <tr>
-                    <td style="background-color: @backgrounds[0]">
-                        <div>
-                            <div>
-                                <img src="@streamer.Profile.ImageUrl" alt="Avatar" class="img-avatar"/>
+            <tr>
+                <td>
+                    <div class="@(ShowLastColumn ? "left-rounded-cell" : "rounded-cell")" style="background-color: @backgrounds[0]">
+                        <img class="profile-img" src="@streamer.Profile.ImageUrl" alt="Avatar"/>
+                        <div class="profile-name">@streamer.Profile.Name</div>
+                    </div>
+                </td>
+
+                @for (int j = 1; j < DataSelectors.Length - 2; j++)
+                {
+                    var data = DataSelectors[j].Invoke(streamer);
+                    var background = backgrounds[j];
+                    <td>
+                        @if (background.Contains('.'))
+                        {
+                            <div class="cell" style="background-image: url('@background'); background-size: cover; background-position: center">
+                                @data
                             </div>
-                            @streamer.Profile.Name
+                        }
+                        else{
+                            <div class="cell" style="background-color: @background">
+                                @data
+                            </div>
+                        }
+                    </td>
+                }
+                @if (ShowLastColumn && LastColumn != null)
+                {
+                    <td>
+                        <div class="right-rounded-cell" style="background-color: @backgrounds[^1]">
+                            @LastColumn(streamer.Data)
                         </div>
                     </td>
-                    @for (int j = 1; j < DataSelectors.Length - 1; j++)
-                    {
-                        <td style="background-color: @backgrounds[j]">
-                            @DataSelectors[j].Invoke(streamer)
+                }
+            </tr>
+        }
+        @if (StreamersCount >= 1 && _showAnimate)
+        {
+            var lastStreamer = Streamers[StreamersCount - 1];
+            var backgrounds = lastStreamer.GetBackrounds(WinningStreamer!);
+            <tr>
+                <Animate Animation="Animations.FlipRight" Duration="TimeSpan.FromSeconds(TimeFlipDuration)" Once="true">
+                    <ChildContent>
+                        <td>
+                            <div class="@(ShowLastColumn ? "left-rounded-cell" : "rounded-cell")" style="background-color: @backgrounds[0]">
+                                <img class="profile-img" src="@lastStreamer.Profile.ImageUrl" alt="Avatar"/>
+                                <div class="profile-name">@lastStreamer.Profile.Name</div>
+                            </div>
                         </td>
-                    }
+                    </ChildContent>
+                </Animate>
 
+                @for (int j = 1; j < DataSelectors.Length - 2; j++)
+                {
+                    var data = DataSelectors[j].Invoke(lastStreamer);
+                    var background = backgrounds[j];
+                    
+                    <td>
+                        <Animate Animation="Animations.FlipRight" Duration="TimeSpan.FromSeconds(TimeFlipDuration)" Delay="@_delays[j - 1]" Once="true">
+                            <ChildContent>
+                                @if (background.Contains('.'))
+                                {
+                                    <div class="cell" style="background-image: url('@background'); background-size: cover; background-position: center;">
+                                        @data
+                                    </div>
+                                }
+                                else{
+                                    <div class="cell" style="background-color: @background">
+                                        @data
+                                    </div>
+                                }
+                            </ChildContent>
+                        </Animate>
+                    </td>
+                }
+                @if (ShowLastColumn && LastColumn != null)
+                {
+                    var delay = _delays![^1];
 
-                    @LastColumn?.Invoke((streamer.Data,@color))
+                    <Animate Animation="Animations.FlipRight" Duration="TimeSpan.FromSeconds(TimeFlipDuration)" Delay="@delay" Once="true">
+                        <ChildContent>
+                            <td>
+                                <div class="right-rounded-cell" style="background-color: @backgrounds[^1]">
+                                    @LastColumn(lastStreamer.Data)
+                                </div>
+                            </td>
+                        </ChildContent>
+                    </Animate>
 
-                </tr>
-            }
+                }
+            </tr>
+
+        }
         </tbody>
-    </table>
+    </tablen>
 }
 
 
 @code {
-    [Parameter]
-    public Streamer[] Streamers { get; set; } = new Streamer[20];
+    [Parameter] public Streamer[] Streamers { get; set; } = new Streamer[20];
 
-    [Parameter]
-    public Func<Streamer, object>[]? DataSelectors { get; set; }
+    [Parameter] public Func<Streamer, object>[]? DataSelectors { get; set; }
 
-    [Parameter]
-    public Streamer? WinningStreamer { get; set; }
+    [Parameter] public Streamer? WinningStreamer { get; set; }
 
-    [Parameter]
-    public string[] ComulnNames { get; set; } = [];
-    
-    [Parameter]
-    public RenderFragment<(StreamerData StreamerData, string Color)>? LastColumn { get; set; }
-    
+    [Parameter] public string[] ColumnNames { get; set; } = [];
+
+    [Parameter] public RenderFragment<StreamerData>? LastColumn { get; set; }
+
+    [Parameter] public int StreamersCount { get; set; } = 0;
+
+    [Parameter] public bool ShowLastColumn { get; set; } = true;
+
+    private TimeSpan[]? _delays;
+
+
+    private bool _showAnimate = true;
+
+    public async Task RotateSelectedRowAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        await JSRuntime.InvokeVoidAsync("animateFlipCards");
+    }
+
+    protected override void OnInitialized()
+    {
+        int length = DataSelectors!.Length - 2;
+
+        if (length < 0)
+        {
+            _delays = [TimeSpan.FromSeconds(TimeFlipDuration)];
+            return;
+        }
+
+        _delays = new TimeSpan[length];
+        _delays[0] = TimeSpan.FromSeconds(TimeFlipDuration);
+        int i = 0;
+        for (i = 1; i < length; i++)
+        {
+            _delays[i] = _delays[i - 1] + TimeSpan.FromSeconds(TimeFlipDuration);
+        }
+    }
+
+    private async Task RunAnimation()
+    {
+        if (!_showAnimate)
+        {
+            _showAnimate = true;
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            _showAnimate = false;
+            StateHasChanged();
+            await RunAnimation();
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async Task ResetAnimation()
+    {
+        _showAnimate = false;
+
+        await Task.Delay(1);
+
+        StateHasChanged();
+
+        _showAnimate = true;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
 }

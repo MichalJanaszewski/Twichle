@@ -1,9 +1,7 @@
-﻿<h3>Timer</h3>
-
-@if (!_timerReached)
+﻿@if (!_timerReached)
 {
-    <p>Next game at: @_endTime?.ToString("HH:mm:ss")</p>
-    <p>Time left: @_timeLeft?.ToString("hh\\:mm\\:ss\\.f")</p>
+    <p>Come back the next day or try a different mode</p>
+    <p>Time remaining until the next game: @_timeLeft?.ToString("hh\\:mm\\:ss\\.f")</p>
 }
 else
 {

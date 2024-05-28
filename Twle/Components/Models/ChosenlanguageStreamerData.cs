@@ -1,11 +1,11 @@
-﻿using static Twle.Components.Utils.Properties;
+﻿using System.Text.Json.Serialization;
+using static Twle.Components.Utils.Properties;
 
 namespace Twle.Components.Models;
-public abstract class ChosenlanguageStreamerData(string mostStreamedCategory, string categoryUrl) : StreamerData
+public class ChosenlanguageStreamerData : StreamerData
 {
-    public required string MostStreamedCategory { get; init; } = mostStreamedCategory;
-
-    public required string CategoryUrl { get; init; } = categoryUrl;
+    public string MostStreamedCategory { get; set; }
+    public string CategoryUrl { get; set; }
 
     public override int[] CompareStreamerData(Object streamerData)
     {
@@ -21,12 +21,12 @@ public abstract class ChosenlanguageStreamerData(string mostStreamedCategory, st
     {
         int[] result = new int[IntData.Length + 1];
 
-        for (int i = 0; i < IntData.Length - 1; i++)
+        for (int i = 0; i < IntData.Length; i++)
         {
             result[i] = IntData[i].CompareTo(streamerData.IntData[i]);
         }
         
-        result[IntData.Length ] = MostStreamedCategory == streamerData.MostStreamedCategory ? CorrectBackgroundId : WrongBackgroundId;
+        result[^1] = MostStreamedCategory == streamerData.MostStreamedCategory ? CorrectBackgroundId : WrongBackgroundId;
         
         return result;
     }

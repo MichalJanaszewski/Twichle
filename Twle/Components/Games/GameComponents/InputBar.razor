@@ -1,49 +1,51 @@
-﻿<div>
-    <label>
-        <input @bind="Sufix" @oninput="UpdateItemsList" @onkeypress="OnKeyPress" />
-    </label>
-    <div>
-        <ul style="max-height: 200px; overflow-y: auto;">
+﻿<div class="centered-input">
+    <input class="styled-input-bar" @bind="Sufix" @oninput="UpdateItemsList" @onkeypress="OnKeyPress" @onclick="ChangeListVisibility" @onblur="HideList"/>
+    <div class="hide-scrollbar @(string.IsNullOrWhiteSpace(Sufix) ? (_showList ? "show" : "") : "show")">
+        <ul class="no-bullets">
             @if (!string.IsNullOrWhiteSpace(Sufix))
             {
                 foreach (var item in StreamerProfile)
                 {
-                    <div style="@(item.IsVisible ? "" : "display: none;")" @onclick="() => onClick(item.Id)">
-                        <li>
+                    if (item.IsVisible)
+                    {
+                        <li @onclick="() => OnClick(item.Id)">
                             <div style="display: flex; align-items: center;">
-                                <img src="@item.ImageUrl" style="width: 50px; height: 50px; margin-right: 10px;" alt="Profile avatar">
+                                <img src="@item.ImageUrl" style="width: 50px; height: 50px; margin-right: 10px;" alt="Profile avatar"/>
                                 @item.Name
                             </div>
                         </li>
-                    </div>
+                    }
                 }
             }
             else
             {
                 foreach (var item in StreamerProfile)
                 {
-                    <div @onclick="() => onClick(item.Id)">
-                        <li>
+
+                    {
+                        <li @onclick="() => OnClick(item.Id)">
                             <div style="display: flex; align-items: center;">
-                                <img src="@item.ImageUrl" style="width: 50px; height: 50px; margin-right: 10px;" alt="Profile avatar">
+                                <img src="@item.ImageUrl" style="width: 50px; height: 50px; margin-right: 10px;" alt="Profile avatar"/>
                                 @item.Name
                             </div>
                         </li>
-                    </div>
+                    }
                 }
             }
         </ul>
     </div>
 </div>
 
+
 @code {
-    [Parameter]
-    public string? Sufix { get; set; }
+    [Parameter] public string? Sufix { get; set; } = "";
     [Parameter]
     public EventCallback<int> PassChosenStreamer { get; set; }
     [Parameter]
     public StreamerProfile[] StreamerProfile { get; set; } = new StreamerProfile[20];
-
+    
+    private bool _showList = false;
+    
     private void UpdateItemsList(ChangeEventArgs e)
     {
         Sufix = e.Value == null ? "" : e.Value.ToString();
@@ -65,7 +67,7 @@
     }
 
     private async Task OnKeyPress(KeyboardEventArgs e)
-    {
+    {  
         if (e.Key == "Enter")
         {
             int foundId = FindStreamer(StreamerProfile, Sufix);
@@ -76,16 +78,28 @@
                         streamer.IsVisible = false;
                 }
 
-                await onClick(foundId);
+                await OnClick(foundId);
             }
         }
     }
-
-
-    private async Task onClick(int id)
+    
+    private async Task OnClick(int id)
     {   
         await PassChosenStreamer.InvokeAsync(id);
         Sufix = "";
+        
         StateHasChanged();  
     }
+    
+    private void ChangeListVisibility()
+    {
+        _showList = !_showList;
+    }
+
+    private void HideList()
+    {
+        _showList = false;
+        StateHasChanged();
+    }
+    
 }

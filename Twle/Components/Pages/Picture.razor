@@ -5,17 +5,25 @@
 
 <PageTitle>Twichle</PageTitle>
 
-@if (_imageDataUrl != null)
-{
-    <div style="width: 400px; height: 400px; overflow: hidden;">
-        <img id="image" src="@_imageDataUrl" style="width: @(_imgSize)px; height: @(_imgSize)px; object-fit: cover;" alt="Avater image"/>
-    </div>
-}
+<div class="container" style="display: flex; position: relative;">
 
-<GameBase Game="@_game" DataSelectors="@_dataSelectors" StorageKey="@_key" TableColumNnames="@_tableColumnNames">
-    <Content>
-    </Content>
-</GameBase>
+    <div style="flex: 1; margin-right: 420px;">
+        <GameBase Game="@_game" DataSelectors="@_dataSelectors" StorageKey="@_key" TableColumNnames="@_tableColumnNames" ShowLastColumn="false">
+            <Content>
+            </Content>
+        </GameBase>
+    </div>
+    
+    <div style="flex: 1;">
+        @if (_imageDataUrl != null)
+        {
+            <div  style="position: fixed; top: 30%; width: 400px; height: 400px; overflow: hidden; margin-left: 50px">
+                <img id="image" src="@_imageDataUrl" style="width: @(_imgSize)px; height: @(_imgSize)px; object-fit: cover;" alt="Avatar image"/>
+            </div>
+        }
+    </div>
+
+</div>
 
 
 @code {

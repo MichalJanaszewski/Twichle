@@ -1,7 +1,87 @@
-img.avatar {
-    width: 10px;
-    height: 100px;
-    margin-right: 10px;
+.cell, .left-rounded-cell, .right-rounded-cell, .rounded-cell  {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+    width: 150px;  
+    height: 90px;
+    overflow: hidden;
+    
+    font-size: 15px;
+    color: #cccccc;
+    text-shadow:
+            -1px -1px 0 #000,
+            1px -1px 0 #000,
+            -1px  1px 0 #000,
+            1px  1px 0 #000;
 }
 
+
+.profile-img {
+    max-height: 60px;
+    max-width: 60px;
+    width: auto;
+    height: auto;
+}
+
+.category-img  {
+    max-height: 86px;
+    max-width: 86px;
+    width: auto;
+    height: auto;
+    padding: 2px;
+}
+
+.profile-name {
+    width: 150px;
+    height: auto;
+    padding: 0;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+td {
+    height: 90px; 
+    width: 150px; 
+    overflow: hidden;
+    text-after-overflow: ellipsis;
+    margin: 10px;
+}
+
+.left-rounded-cell {
+
+    border-top-left-radius: 25px;
+    border-bottom-left-radius: 25px;
+}
+
+.right-rounded-cell {
+    border-top-right-radius: 25px;
+    border-bottom-right-radius: 25px;
+}
+
+.rounded-cell{
+    border-radius: 25px;
+}
+
+.col-name{
+    text-align: center;
+}
+
+.header-cell {
+    background: #cccccc;
+    text-align: center;
+    padding: 10px;
+    width: 150px;
+}
+
+.header-cell:first-child {
+    border-top-left-radius: 15px;
+    border-bottom-left-radius: 15px;
+}
+
+.header-cell:last-child {
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
 

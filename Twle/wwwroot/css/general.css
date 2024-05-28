@@ -1,0 +1,21 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+}
+
+.container > * {
+    margin: 10px 0;
+}
+
+.language-list {
+    padding-right: 30px;
+    border-left: 30px;
+    list-style: none
+}
+
+.language-list-item{
+    color: wheat; 
+    text-decoration: none;
+}

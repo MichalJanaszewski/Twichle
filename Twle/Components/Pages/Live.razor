@@ -5,12 +5,10 @@
 
 <PageTitle>Twichle</PageTitle>
 
-<GameBase Game="@_game" DataSelectors="@_dataSelectors" StorageKey="@_key" TableColumNnames="@_tableColumNnames" >
+<GameBase Game="@_game" DataSelectors="@_dataSelectors" StorageKey="@_key" TableColumNnames="@_tableColumNnames">
     <Content>
-        <td style="background-color:@context.Item2 ">
-            <img src="@(((MainModeStreamerData)context.streamerData).CategoryUrl)"
-                 alt="@(((MainModeStreamerData)context.streamerData).MostStreamedCategory)" class="category-img">
-        </td>
+        <img src="@(((MainModeStreamerData)context).CategoryUrl)"
+             alt="@(((MainModeStreamerData)context).MostStreamedCategory)" class="category-img" >
     </Content>
 </GameBase>
 
@@ -20,14 +18,16 @@
 
     private readonly string _key = "/" + LiveModeAccesUrl + DateTime.Now.Date.ToString(CultureInfo.InvariantCulture);
 
-    private readonly string[] _tableColumNnames = { "Streamer", "Language", "Data1", "Data2", "Data3" };
+    private readonly string[] _tableColumNnames = { "Streamer", "Language","Current Viewers", "Stream Duration", "Total Viewers",  "Streaming Category" };
 
     private readonly Func<Streamer, object>[] _dataSelectors = new Func<Streamer, object>[]
     {
         streamer => streamer.Profile.Name,
         streamer => ((MainModeStreamerData)streamer.Data).Language,
         streamer => streamer.Data.IntData[0],
+        streamer => (streamer.Data.IntData[2] / 60).ToString() + "h " +  (streamer.Data.IntData[2] % 60).ToString() +"m",
         streamer => streamer.Data.IntData[1],
-        streamer => streamer.Data.IntData[2]
+        streamer => ((MainModeStreamerData)streamer.Data).MostStreamedCategory,
+        streamer => ((MainModeStreamerData)streamer.Data).CategoryUrl
     };
 }

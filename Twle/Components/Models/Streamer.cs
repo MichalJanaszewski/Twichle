@@ -6,6 +6,8 @@ public class Streamer
     public StreamerProfile Profile { get; set; }
     public StreamerData Data { get; set; }
 
+    public bool FirstAnimation { get; set; } = true;
+
     public Streamer(StreamerProfile profile, StreamerData data) { 
         this.Profile = profile;
         this.Data = data;   

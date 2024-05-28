@@ -26,7 +26,7 @@ public class MainModeStreamerData : StreamerData
 
     private int[] CompareStreamerData(MainModeStreamerData streamerData) {
 
-        int[] result = new int[IntData.Length + 3];
+        int[] result = new int[IntData.Length + 2];
         result[0] = Language == streamerData.Language ? CorrectBackgroundId : WrongBackgroundId;
         
         for (int i = 0; i < IntData.Length; i++)
@@ -35,8 +35,7 @@ public class MainModeStreamerData : StreamerData
         }
         
         result[4] = MostStreamedCategory == streamerData.MostStreamedCategory ? CorrectBackgroundId : WrongBackgroundId;
-
-        result[5] = result[4];
+        
         
         return result;
     }

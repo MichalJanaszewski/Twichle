@@ -1,30 +1,31 @@
 ﻿@inject HttpClient HttpClient
 @inject LocalStorageHandler LocalStorageHandler
+@inject IJSRuntime JSRuntime
 
 @typeparam TStreamerDataType where TStreamerDataType : StreamerData
+<div class="container">
+    @if (!Game.AlreadyWon)
+    {
+        <InputBar PassChosenStreamer="AddStreamer" StreamerProfile="@Game.StreamerProfiles.ToArray()"/>
+    }
 
+    @if (_dataIsLoaded){
+        <Table Streamers="@Game.ChosenStreamers" WinningStreamer="@_winningStreamer" @ref="_animateLastRow" ShowLastColumn="@ShowLastColumn"
+               DataSelectors="@DataSelectors" ColumnNames="@TableColumNnames" StreamersCount="@_streamersCount">
+            <LastColumn>
+                    @Content?.Invoke((StreamerData)context)
+            </LastColumn>
+            
+        </Table>
+        
+    }
 
-@if (!Game.AlreadyWon)
-{
-    <InputBar PassChosenStreamer="AddStreamer" StreamerProfile="@Game.StreamerProfiles.ToArray()" />
-}
-
-@if (_dataIsLoaded){
-    <Table Streamers="@Game.ChosenStreamers" WinningStreamer="@_winningStreamer"
-           DataSelectors="@DataSelectors" ComulnNames="@TableColumNnames">
-        <LastColumn>
-            @Content?.Invoke(((StreamerData, string))context)
-        </LastColumn>
-    </Table>
-    
-}
-
-@if (Game.AlreadyWon)
-{
-    <h1>YOU WON</h1>
-    <NexEvTimer></NexEvTimer>
-}
-
+    @if (Game.AlreadyWon)
+    {
+        <h1>YOU WON</h1>
+        <NexEvTimer></NexEvTimer>
+    }
+</div>
 @code {
     [Parameter]
     public Func<Streamer, object>[] DataSelectors { get; set; } = [];
@@ -33,21 +34,31 @@
     public Game<TStreamerDataType> Game { get; set; } = null!;
 
     [Parameter]
-    public string StorageKey { get; set; } = "";
+    public string StorageKey { get; set; } = ""; 
 
     [Parameter]
     public string[] TableColumNnames { get; set; } = [];
     
     [Parameter]
-    public RenderFragment<(StreamerData streamerData, string color)>? Content { get; set; }
+    public RenderFragment<StreamerData>? Content { get; set; }
     
-    
+    [Parameter] 
+    public bool ShowLastColumn { get; set; } = true;
 
+    private Table _animateLastRow = null!;
+    
     private Streamer? _winningStreamer;
 
     private bool _alreadyWon = false;
 
     private bool _dataIsLoaded = false;
+
+    private int _streamersCount = 0;
+    
+    private async Task MakeAnimation()
+    {
+        await _animateLastRow.ResetAnimation();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -69,7 +80,7 @@
         {
             string progresValue = await LocalStorageHandler.GetValueAsync<string>(StorageKey);
 
-            await Game.LoadLocStorageAsync(progresValue);
+            _streamersCount += await Game.LoadLocStorageAsync(progresValue);
 
             _dataIsLoaded = true;
             StateHasChanged();
@@ -80,10 +91,14 @@
     private async Task AddStreamer(int id)
     {
         string? gameHistory = await Game.AddStreamer(id);
+        _streamersCount++;
+        
         if (gameHistory != null)
         {
             await LocalStorageHandler.SetValueAsync(StorageKey, gameHistory);
         }
         StateHasChanged();
+
+        await MakeAnimation();
     }
 }
