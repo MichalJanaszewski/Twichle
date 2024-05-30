@@ -70,23 +70,50 @@
         await Game.LoadStreamersProfilesAsync();
         _winningStreamer = await Game.GetWinningStreamer();
 
+        Game.SetWinningFlag = SetWinningFlag;
+
         StateHasChanged();
     }
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (!firstRender)
         {
-            string progresValue = await LocalStorageHandler.GetValueAsync<string>(StorageKey);
-
-            _streamersCount += await Game.LoadLocStorageAsync(progresValue);
-
-            _dataIsLoaded = true;
-            StateHasChanged();
+            return;
         }
+        if (await ResetLocalStorageAsync())
+        {
+            _dataIsLoaded = true;
+            return;
+        }
+        
+        await LoadStorageAsync();
+        StateHasChanged();
     }
 
+    private async Task<bool> ResetLocalStorageAsync()
+    {
+        string? resetFlag = await LocalStorageHandler.GetValueAsync<string>(RestFlagKey);
+        
+        if (resetFlag is null || resetFlag.Equals(DateTime.Today.ToString()))
+        {
+            return false;
+        }
+
+        await LocalStorageHandler.Clear();
+            
+        return true;
+    }
+
+    private async Task LoadStorageAsync()
+    {
+        string progresValue = await LocalStorageHandler.GetValueAsync<string>(StorageKey);
+
+        _streamersCount += await Game.LoadLocStorageAsync(progresValue);
+
+        _dataIsLoaded = true;
+    }
 
     private async Task AddStreamer(int id)
     {
@@ -101,4 +128,10 @@
 
         await MakeAnimation();
     }
+
+    private async Task SetWinningFlag()
+    {
+        await LocalStorageHandler.SetValueAsync(RestFlagKey, DateTime.Today.ToString());
+    }
+
 }

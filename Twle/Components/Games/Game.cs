@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-using Twle.Components.Models;
-
+﻿using Twle.Components.Models;
 
 namespace Twle.Components.Games
 {
@@ -15,6 +13,7 @@ namespace Twle.Components.Games
         private int WinnerId { get; set; } = -1;
         private readonly string _profilesApiUrl;
 
+        public Func<Task> SetWinningFlag { get; set; }
         public Game(string profilesApiUrl)
         {
             this._profilesApiUrl = profilesApiUrl;
@@ -101,6 +100,7 @@ namespace Twle.Components.Games
                 if (id == WinnerId)
                 {
                     AlreadyWon = true;
+                    await SetWinningFlag();
                 }
             }
             OnStreamerListChanged?.Invoke();

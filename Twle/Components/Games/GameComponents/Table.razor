@@ -154,13 +154,7 @@
 
 
     private bool _showAnimate = true;
-
-    public async Task RotateSelectedRowAsync()
-    {
-        await InvokeAsync(StateHasChanged);
-        await JSRuntime.InvokeVoidAsync("animateFlipCards");
-    }
-
+    
     protected override void OnInitialized()
     {
         int length = DataSelectors!.Length - 2;

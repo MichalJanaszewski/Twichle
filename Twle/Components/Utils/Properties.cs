@@ -19,6 +19,8 @@ public static class Properties
     public const string LanguageModeAccesUrl = "/LanguageMode/";
     public const string PictureModeAccesUrl = "/PictureMode";
     public const string LiveModeAccesUrl = "/LiveMode";
+    
+    public const string RestFlagKey = "/r";
 
 
     public const double TimeFlipDuration = 0.5; //0.5s
