@@ -4,8 +4,10 @@
 @rendermode InteractiveServer
 
 <PageTitle>Twichle</PageTitle>
-
-<GameBase Game="@_game" DataSelectors="@_dataSelectors" StorageKey="@_key" TableColumNnames="@_tableColumNnames">
+<div class="top-bar">
+    <StatsButton/>
+</div>
+<GameBase Game="@_game" DataSelectors="@_dataSelectors" StorageKey="@_key" TableColumNnames="@_tableColumNnames" TimerEndTime="@_endTime" ResetFlag="@ResetLiveFlagKey">
     <Content>
         <img src="@(((MainModeStreamerData)context).CategoryUrl)"
              alt="@(((MainModeStreamerData)context).MostStreamedCategory)" class="category-img" >
@@ -14,7 +16,7 @@
 
 
 @code {
-    private readonly Game<MainModeStreamerData> _game = new(MainApiUrl + LiveModeAccesUrl);
+    private readonly Game<MainModeStreamerData> _game = new(MainApiUrl + LiveModeAccesUrl, LiveModeAccesUrl);
 
     private readonly string _key = "/" + LiveModeAccesUrl + DateTime.Now.Date.ToString(CultureInfo.InvariantCulture);
 
@@ -30,4 +32,21 @@
         streamer => ((MainModeStreamerData)streamer.Data).MostStreamedCategory,
         streamer => ((MainModeStreamerData)streamer.Data).CategoryUrl
     };
+    
+    private static readonly DateTime Now = DateTime.Now;
+
+    private  DateTime _endTime;
+
+    protected override void OnInitialized()
+    {
+        if (Now.Hour == 23)
+        {
+            _endTime = Now.AddDays(1).Date;
+        }
+        else
+        {
+            _endTime = new(Now.Year, Now.Month, Now.Day, Now.Hour + 1, 0, 0);
+        }
+    }
+
 }

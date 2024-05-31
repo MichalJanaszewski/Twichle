@@ -3,6 +3,7 @@
 @inject IJSRuntime JSRuntime
 
 @typeparam TStreamerDataType where TStreamerDataType : StreamerData
+
 <div class="container">
     @if (!Game.AlreadyWon)
     {
@@ -22,8 +23,8 @@
 
     @if (Game.AlreadyWon)
     {
-        <h1>YOU WON</h1>
-        <NexEvTimer></NexEvTimer>
+        <h1 class="border-text" style="font-size: 60px">YOU WON</h1>
+        <NexEvTimer EndTime="@TimerEndTime"></NexEvTimer>
     }
 </div>
 @code {
@@ -44,6 +45,12 @@
     
     [Parameter] 
     public bool ShowLastColumn { get; set; } = true;
+    
+    [Parameter] 
+    public DateTime TimerEndTime { get; set; }
+
+    [Parameter] 
+    public string? ResetFlag { get; set; } = null;
 
     private Table _animateLastRow = null!;
     
@@ -94,35 +101,59 @@
 
     private async Task<bool> ResetLocalStorageAsync()
     {
-        string? resetFlag = await LocalStorageHandler.GetValueAsync<string>(RestFlagKey);
-        
-        if (resetFlag is null || resetFlag.Equals(DateTime.Today.ToString()))
+        ResetFlag  = ResetFlag  is null ? ResetFlagKey : ResetFlag;
+        var resetFlagStatus = await LocalStorageHandler.GetValueAsync<string>(ResetFlag);
+        if (resetFlagStatus is null)
         {
             return false;
         }
 
-        await LocalStorageHandler.Clear();
+        if (ResetFlag.Equals(ResetFlagKey))
+        {
+            if (resetFlagStatus.Equals(DateTime.Today.ToString()))
+            {
+                return false;
+            }
             
+            var liveHistory = await LocalStorageHandler.GetValueAsync<string>("/LiveMode");
+            await LocalStorageHandler.Clear();
+            if (liveHistory is not null)
+            {
+               await LocalStorageHandler.SetValueAsync(StorageKey, liveHistory);
+            }
+        }
+        else
+        {   
+            DateTime nextHour = DateTime.Today.AddHours(1); 
+            nextHour = nextHour.AddMinutes(-nextHour.Minute);
+            nextHour = nextHour.AddSeconds(-nextHour.Second);
+            
+            if (resetFlagStatus.Equals(nextHour.ToString()))
+            {
+                return false;
+            }
+
+            await LocalStorageHandler.RemoveAsync(ResetLiveFlagKey);
+        }
+        
         return true;
     }
 
     private async Task LoadStorageAsync()
     {
         string progresValue = await LocalStorageHandler.GetValueAsync<string>(StorageKey);
-
-        _streamersCount += await Game.LoadLocStorageAsync(progresValue);
-
+        _streamersCount = await Game.LoadLocStorageAsync(progresValue);
         _dataIsLoaded = true;
     }
 
     private async Task AddStreamer(int id)
     {
-        string? gameHistory = await Game.AddStreamer(id);
-        _streamersCount++;
+        var gameData = await Game.AddStreamer(id);
+        _streamersCount = gameData.streamersCount;
         
-        if (gameHistory != null)
+        if (gameData.gameHistory != null)
         {
-            await LocalStorageHandler.SetValueAsync(StorageKey, gameHistory);
+            await LocalStorageHandler.SetValueAsync(StorageKey, gameData.gameHistory);
         }
         StateHasChanged();
 
@@ -131,7 +162,18 @@
 
     private async Task SetWinningFlag()
     {
-        await LocalStorageHandler.SetValueAsync(RestFlagKey, DateTime.Today.ToString());
+        ResetFlag  = ResetFlag  is null ? ResetFlagKey : ResetFlag;
+        if (ResetFlag.Equals(ResetFlagKey))
+        {
+            await LocalStorageHandler.SetValueAsync(ResetFlag, DateTime.Today.ToString());
+        }
+        else
+        {
+            DateTime nextHour = DateTime.Today.AddHours(1); 
+            nextHour = nextHour.AddMinutes(-nextHour.Minute);
+            nextHour = nextHour.AddSeconds(-nextHour.Second);
+            await LocalStorageHandler.SetValueAsync(ResetFlag, nextHour.ToString());
+        }
     }
 
 }

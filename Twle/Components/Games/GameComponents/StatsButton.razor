@@ -1,0 +1,26 @@
+<StatsPopUp IsOpen="@isStatsOpen" CollectedStats="@CollectedStats"/>
+
+<div class="nav-item px-3">
+    <button type="button" @onclick="ToggleStats">Statistics</button>
+</div>
+
+@code {
+    bool isStatsOpen = false;
+
+    public Dictionary<string, int[]> CollectedStats { get; set; }
+
+    async Task ToggleStats()
+    {
+        await GetStats();
+        isStatsOpen = !isStatsOpen;
+    }
+
+    private async Task GetStats()
+    {
+        var httpClient = new HttpClient();
+        using HttpResponseMessage response = await httpClient.GetAsync(MainApiUrl + GetStastsUrl);
+        response.EnsureSuccessStatusCode();
+
+        CollectedStats = await response.Content.ReadFromJsonAsync<Dictionary<string, int[]>>();
+    }
+}

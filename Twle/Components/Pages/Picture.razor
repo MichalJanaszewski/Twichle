@@ -4,7 +4,9 @@
 @rendermode InteractiveServer
 
 <PageTitle>Twichle</PageTitle>
-
+<div class="top-bar">
+    <StatsButton/>
+</div>
 <div class="container" style="display: flex; position: relative;">
 
     <div style="flex: 1; margin-right: 420px;">
@@ -27,7 +29,7 @@
 
 
 @code {
-    private readonly Game<MainModeStreamerData> _game = new Game<MainModeStreamerData>(MainApiUrl + PictureModeAccesUrl);
+    private readonly Game<MainModeStreamerData> _game = new Game<MainModeStreamerData>(MainApiUrl + PictureModeAccesUrl, PictureModeAccesUrl);
 
     private readonly string _key = "/"+ PictureModeAccesUrl + DateTime.Now.Date.ToString(CultureInfo.InvariantCulture);
 

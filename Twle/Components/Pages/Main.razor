@@ -4,18 +4,20 @@
 @rendermode InteractiveServer
 
 <PageTitle>Twichle</PageTitle>
-
+<div class="top-bar">
+    <StatsButton/>
+</div>
 <div class="container">
     <GameBase Game="@_game" DataSelectors="@_dataSelectors" StorageKey="@_key" TableColumNnames="@_tableColumNames">
         <Content>
             <img src="@(((MainModeStreamerData)context).CategoryUrl)"
-                 alt="@(((MainModeStreamerData)context).MostStreamedCategory)" class="category-img" >
+                 alt="@(((MainModeStreamerData)context).MostStreamedCategory)" class="category-img">
         </Content>
     </GameBase>
 </div>
 
 @code {
-    private readonly Game<MainModeStreamerData> _game = new(MainApiUrl + MainModeApiUrl);
+    private readonly Game<MainModeStreamerData> _game = new(MainApiUrl + MainModeApiUrl, "MainMode");
     private readonly string _key = "/" + DateTime.Now.Date.ToString(CultureInfo.InvariantCulture);
     private readonly string[] _tableColumNames = { "Streamer", "Language", "Hours Watched", "Average viewers", "Total Followers", "Most streamed category" };
 

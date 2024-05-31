@@ -19,3 +19,13 @@
     color: wheat; 
     text-decoration: none;
 }
+
+.border-text {
+     font-size: 20px;
+     color: black;
+     text-shadow:
+             -1px -1px 0 gray,
+             1px -1px 0 gray,
+             -1px  1px 0 gray,
+             1px  1px 0 gray;
+}

@@ -1,0 +1,76 @@
+@if (IsOpen)
+{
+    <div class="modal" tabindex="-1" role="dialog" style="display: block;">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content popup-transparent">
+                <div class="modal-header">
+                    <h5 class="modal-title">Statistic</h5>
+                    <button type="button" class="close" aria-label="Close" @onclick="CloseDialog">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @if (CollectedStats != null)
+                    {
+                        @foreach (var entry in CollectedStats)
+                        {
+                            <div class="stats-entry">
+                                <div class="key">
+                                    <strong>@FormatKey(entry.Key)</strong>
+                                </div>
+                                <div class="values">
+                                    @for (int i = 0; i < entry.Value.Length; i += 2)
+                                    {
+                                        <div class="value-pair">
+                                            <div class="value-container-text">
+                                                <span>Average wins after @(Math.Round((double)entry.Value[0] / entry.Value[1], 2)) guesses.</span>
+                                                <span>Total number of wins for all players: @entry.Value[1].</span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p>Brak danych do wyświetlenia.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@code {
+[Parameter]
+public bool IsOpen { get; set; }
+
+[Parameter]
+public EventCallback<bool> IsOpenChanged { get; set; }
+
+[Parameter]
+public Dictionary<string, int[]> CollectedStats { get; set; }
+
+private async Task CloseDialog()
+{
+IsOpen = false;
+await IsOpenChanged.InvokeAsync(IsOpen);
+}
+
+private string FormatKey(string key)
+{
+if (key.StartsWith("/"))
+{
+key = key.TrimStart('/');
+}
+
+var segments = key.Split('/');
+var formattedSegments = segments.Select(segment =>
+string.Concat(segment.Select((ch, i) => i > 0 && char.IsUpper(ch) ? " " + ch : ch.ToString())));
+
+return string.Join(" - ", formattedSegments);
+}
+}

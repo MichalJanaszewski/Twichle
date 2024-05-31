@@ -1,0 +1,63 @@
+.modal {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.stats-entry {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.key {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.values {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.value-pair {
+    display: flex; /* Dodany styl */
+    justify-content: flex-start; /* Dodany styl */
+    width: 100%;
+    max-width: 300px;
+    padding: 0 10px;
+}
+
+.value-container {
+    flex: 1;
+    text-align: center;
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin: 5px;
+    vertical-align: middle;
+}
+
+.popup-transparent {
+    opacity: 0.9;
+    background-color: rgba(211, 211, 211, 0.9);
+}
+
+.value-container-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.value-container-text span {
+    margin-bottom: 5px;
+}
+
+.modal-title {
+    text-align: center;
+    width: 100%;
+}

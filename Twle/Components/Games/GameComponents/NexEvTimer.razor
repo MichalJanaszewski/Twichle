@@ -1,27 +1,44 @@
 ﻿@if (!_timerReached)
 {
-    <p>Come back the next day or try a different mode</p>
-    <p>Time remaining until the next game: @_timeLeft?.ToString("hh\\:mm\\:ss\\.f")</p>
+    <p class="border-text">Come back the next day or try a different mode</p>
+    <p class="border-text">Time remaining until the next game: @_timeLeft?.ToString("hh\\:mm\\:ss\\.f")</p>
 }
 else
 {
-    <p>Czas minął!</p>
+    <p class="border-text">New game should be available, try refreshing the page</p>
 }
+<style>
+    .border-text {
+        font-size: 20px;
+        color: black;
+        text-shadow:
+            -1px -1px 0 gray,
+            1px -1px 0 gray,
+            -1px  1px 0 gray,
+            1px  1px 0 gray;
+    }
+</style>
+
 
 @code {
     private Timer _timer = new Timer(100);
-    private DateTime? _endTime;
+
+    [Parameter] 
+    public DateTime? EndTime { get; set; } = null;
     private TimeSpan? _timeLeft;
     private bool _timerReached = false;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-
+        
         DateTime now = DateTime.Now;
-        _endTime = new DateTime(now.Year, now.Month, now.Day, 23, 59, 59);
-        _timeLeft = _endTime - now;
-
+        if (EndTime == default(DateTime))
+        {
+            EndTime = new DateTime(now.Year, now.Month, now.Day, 23, 59, 59);
+        }
+        
+        _timeLeft = EndTime - now;
         _timer.Elapsed += TimerElapsed;
         _timer.Start();
     }
@@ -29,13 +46,13 @@ else
     private void TimerElapsed(object? sender, ElapsedEventArgs e)
     {
         DateTime now = DateTime.Now;
-        _timeLeft = _endTime - now;
+        _timeLeft = EndTime - now;
 
-        if (_endTime.HasValue)
+        if (EndTime.HasValue)
         {
-            _timeLeft = _endTime.Value - now;
+            _timeLeft = EndTime.Value - now;
 
-            if (now >= _endTime.Value)
+            if (now >= EndTime.Value)
             {
                 _timerReached = true;
                 _timer.Stop();

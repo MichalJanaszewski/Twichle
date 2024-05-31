@@ -1,4 +1,7 @@
-﻿using Twle.Components.Models;
+﻿using System.Text;
+using System.Text.Json;
+using Twle.Components.Models;
+using static Twle.Components.Utils.Properties;
 
 namespace Twle.Components.Games
 {
@@ -12,24 +15,32 @@ namespace Twle.Components.Games
         private string _gameHistory = "";
         private int WinnerId { get; set; } = -1;
         private readonly string _profilesApiUrl;
+        private readonly string _gameMode;
+        private int _streamersCount = 0;
+        private bool locStorageLoaded = false;
+        
+        private  HttpClient _httpClient = new HttpClient();
 
         public Func<Task> SetWinningFlag { get; set; }
-        public Game(string profilesApiUrl)
+
+        public Game(string profilesApiUrl, string gameMode)
         {
             this._profilesApiUrl = profilesApiUrl;
+            this._gameMode = gameMode;
         }
 
         public async Task<int> LoadLocStorageAsync(string? progresValue)
         {
-            int streamersCount = 0;
             if (progresValue == null)
             {
-                return streamersCount;
+                locStorageLoaded = true;
+                return _streamersCount;
             }
 
             string[] splitedStoreage = progresValue.Substring(0, progresValue.LastIndexOf(';')).Split(';');
 
-            if (splitedStoreage.Length > 0 && Int32.Parse(splitedStoreage[splitedStoreage.Length - 1]) == WinnerId) {
+            if (splitedStoreage.Length > 0 && Int32.Parse(splitedStoreage[splitedStoreage.Length - 1]) == WinnerId)
+            {
                 AlreadyWon = true;
             }
 
@@ -37,21 +48,21 @@ namespace Twle.Components.Games
             {
                 await LoadStreamersProfilesAsync();
             }
-            
+
             foreach (string stringId in splitedStoreage)
             {
                 int id = Int32.Parse(stringId);
                 await AddStreamer(id);
-                streamersCount++;
             }
 
-            return streamersCount;
+            locStorageLoaded = true;
+            return _streamersCount;
         }
+
         public async Task LoadStreamersProfilesAsync()
         {
-                using var httpClient = new HttpClient();
-            using HttpResponseMessage response = await httpClient.GetAsync(_profilesApiUrl),
-                   winnerResponse = await httpClient.GetAsync(_profilesApiUrl +"/WinnerId");
+            using HttpResponseMessage response = await _httpClient.GetAsync(_profilesApiUrl),
+                winnerResponse = await _httpClient.GetAsync(_profilesApiUrl + "/WinnerId");
             if (response.IsSuccessStatusCode)
             {
                 List<StreamerProfile>? tmpList = await response.Content.ReadFromJsonAsync<List<StreamerProfile>>();
@@ -59,9 +70,9 @@ namespace Twle.Components.Games
                 {
                     throw new HttpRequestException("Failed to retrieve data from the server");
                 }
-              
+
                 StreamerProfiles = tmpList;
-                
+
             }
 
             if (winnerResponse.IsSuccessStatusCode)
@@ -73,9 +84,7 @@ namespace Twle.Components.Games
 
         private async Task<string?> LoadStreamerById(int streamerId)
         {
-
-            using var httpClient = new HttpClient();
-            using HttpResponseMessage response = await httpClient.GetAsync($"{_profilesApiUrl}/{streamerId}");
+            using HttpResponseMessage response = await _httpClient.GetAsync($"{_profilesApiUrl}/{streamerId}");
             response.EnsureSuccessStatusCode();
             StreamerData? data = await response.Content.ReadFromJsonAsync<T>();
             if (data != null)
@@ -90,39 +99,41 @@ namespace Twle.Components.Games
         }
 
         public event Action? OnStreamerListChanged;
-        public async Task<string?> AddStreamer(int id)
+
+        public async Task<(string? gameHistory, int streamersCount)> AddStreamer(int id)
         {
             string? valueToSave = null;
             if (StreamerProfiles.Any(profile => profile.Id == id))
             {
+                _streamersCount++;
                 valueToSave = await LoadStreamerById(id);
                 StreamerProfiles.RemoveAt(StreamerProfiles.FindIndex(profile => profile.Id == id));
                 if (id == WinnerId)
                 {
                     AlreadyWon = true;
                     await SetWinningFlag();
+                    await PostStats();
                 }
             }
+
             OnStreamerListChanged?.Invoke();
-            return valueToSave;
+            return (valueToSave, _streamersCount);
         }
 
-        public async Task<Streamer?> GetWinningStreamer() 
+        public async Task<Streamer?> GetWinningStreamer()
         {
-            using var httpClient = new HttpClient();
-            using HttpResponseMessage response = await httpClient.GetAsync($"{_profilesApiUrl}/{WinnerId}");
+            using HttpResponseMessage response = await _httpClient.GetAsync($"{_profilesApiUrl}/{WinnerId}");
             response.EnsureSuccessStatusCode();
-
-            string jsonString = await response.Content.ReadAsStringAsync();
             
             var data = await response.Content.ReadFromJsonAsync<T>();
             if (data != null)
             {
                 StreamerProfile? profile = StreamerProfiles.FirstOrDefault(profile => profile.Id == WinnerId);
-                if (profile is null) 
+                if (profile is null)
                 {
                     return null;
                 }
+
                 Streamer streamer = new Streamer(profile, data);
                 return streamer;
             }
@@ -130,5 +141,24 @@ namespace Twle.Components.Games
             throw new InvalidOperationException("Can't access server");
         }
 
+        private async Task PostStats()
+        {
+            if (!locStorageLoaded)
+            {
+                return;
+            }
+
+            Stats stats = new Stats(_streamersCount, _gameMode);
+            try
+            {
+                var data = JsonSerializer.Serialize(stats);
+                var content = new StringContent(data, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync(MainApiUrl + PostStastsUrl, content);
+            }
+            catch (Exception ex)
+            {
+                // ignored
+            }
+        }
     }
 }

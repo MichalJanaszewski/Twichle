@@ -6,7 +6,7 @@ public static class Properties
 {
     public static readonly string CorrectDataBackground = "green";
     public static readonly string ToHighDataBackground = "WrongAnswerToHigh.jpg";
-    public static readonly string ToLowDataBackground = "WrongAnswerToLow.jpg";
+    public static readonly string ToLowDataBackground = "WrongAnswerToLow2.jpg";
     public static readonly string WrongBackground = "#D22D45";
 
     public const int WrongBackgroundId = 2;
@@ -19,9 +19,11 @@ public static class Properties
     public const string LanguageModeAccesUrl = "/LanguageMode/";
     public const string PictureModeAccesUrl = "/PictureMode";
     public const string LiveModeAccesUrl = "/LiveMode";
+    public const string PostStastsUrl = "/Stats";
+    public const string GetStastsUrl = "/Stats/data";
     
-    public const string RestFlagKey = "/r";
-
+    public const string ResetFlagKey = "/r";
+    public const string ResetLiveFlagKey = "/rl";
 
     public const double TimeFlipDuration = 0.5; //0.5s
 }

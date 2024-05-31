@@ -5,7 +5,9 @@
 @rendermode InteractiveServer
 
 <PageTitle>Language</PageTitle>
-
+<div class="top-bar">
+    <StatsButton/>
+</div>
 <div class="container">
     @if (LanguaneName != "none")
     {
@@ -58,6 +60,8 @@
         "French",
         "Portuguese",
         "German",
+        "Polish",
+        "Japanese"
     ];
 
     private readonly string[] _tableColumnNames = { "Streamer", "Hours Watched", "Average viewers", "Total Followers", "Most streamed category" };
@@ -77,7 +81,7 @@
         LanguaneName = NavigationManager.Uri.Split('/').Last();
         _profilesUrl = MainApiUrl + LanguageModeAccesUrl + LanguaneName;
         _localStorageKey = "/" + LanguageModeAccesUrl + LanguaneName + DateTime.Now.Date.ToString(CultureInfo.InvariantCulture);
-        _game = new(_profilesUrl);
+        _game = new(_profilesUrl, LanguageModeAccesUrl + LanguaneName);
         StateHasChanged();
     }
 }
